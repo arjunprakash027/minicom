@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h2>Your Chat with Admin</h2>
+
+    <div id="messages"></div>
+
+    <input id="msg" placeholder="Type a message">
+    <button onclick="sendMessage()">Send</button>
+
+<script>
+const email = "{{ email }}";  // session email
+
+function loadMessages() {
+    fetch(`/api/messages/${email}/`)
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById("messages").innerHTML =
+                data.map(m => `<p><b>${m.sender_type}:</b> ${m.content}</p>`).join("");
+        });
+}
+
+function sendMessage() {
+    const content = document.getElementById("msg").value;
+
+    fetch(`/api/send/${email}/`, {
+        method: "POST",
+        body: JSON.stringify({content}),
+        headers: {"Content-Type": "application/json"}
+    })
+    .then(() => {
+        document.getElementById("msg").value = "";
+        loadMessages();
+    });
+}
+
+setInterval(loadMessages, 1500);
+loadMessages();
+</script>
+
+</body>
+</html>
