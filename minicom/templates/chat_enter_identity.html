@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Start Chat</title>
+</head>
+<body>
+    <h2>Start a chat with support</h2>
+
+    <p>Please enter your email to continue:</p>
+
+    <input id="email" type="email" placeholder="you@example.com">
+    <button onclick="identify()">Start Chat</button>
+
+    <p id="error" style="color: red;"></p>
+
+<script>
+function identify() {
+    const emailInput = document.getElementById("email");
+    const errorEl = document.getElementById("error");
+    const email = emailInput.value.trim();
+
+    errorEl.textContent = "";
+
+    if (!email) {
+        errorEl.textContent = "Email is required.";
+        return;
+    }
+
+    fetch("/api/identify/", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ email })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(data => { throw data; });
+        }
+        return response.json();
+    })
+    .then(() => {
+        // Once email is stored in the session, go to the main chat page
+        window.location = "/chat/";
+    })
+    .catch(err => {
+        errorEl.textContent = err.error || "Something went wrong. Please try again.";
+    });
+}
+</script>
+
+</body>
+</html>
