@@ -22,21 +22,11 @@ def get_user_email(request):
     """
     return request.session.get("email")
 
+def login_page(request):
+    return render(request, "login.html")
 
 def chat_view(request):
-    """
-    The participant chat page.
-
-    If the user has not identified (no email in session), we show a simple
-    form asking for their email.
-
-    Once they have identified, we render the main chat UI template.
-    """
-    if not is_user(request):
-        # Participant not identified yet → ask for email
-        return render(request, "chat_enter_identity.html")
-
-    return render(request, "chat.html")   # Main participant chat interface
+    return render(request, "chat.html")
 
 def admin_dashboard(request):
     """
@@ -45,7 +35,6 @@ def admin_dashboard(request):
 
     This page shows a list of participant emails derived from messages.
     """
-    request.session["role"] = "admin"  # Single admin → no password, no auth
 
     participants = (
         Message.objects
@@ -54,15 +43,13 @@ def admin_dashboard(request):
         .order_by("participant_email")
     )
 
-    return render(request, "admin_dashboard.html", {"participants": participants})
+    return render(request, "admin_list.html", {"participants": participants})
 
 
 def admin_chat_view(request, email):
     """
     Admin opens a chat with a specific participant using email as key.
     """
-    if not is_admin(request):
-        return HttpResponseForbidden("Admins only.")
 
     return render(request, "admin_chat.html", {"email": email})
 

@@ -24,13 +24,13 @@ from django.urls import path
 
 urlpatterns = [
     # Pages
+    path('login/', views.login_page),
     path('chat/', views.chat_view),
-    path('admin/chat/', views.admin_chat_view),
-    path('admin/chat/<str:email>/', views.admin_dashboard),
+    path('admin/chat/', views.admin_dashboard),
+    path('admin/chat/<str:email>/', views.admin_chat_view),
 
     # API
-    path('api/identify/', api.api_identify),
     path('api/messages/<str:email>/', api.api_messages),
-    path('api/send/<str:email>/', api.api_send),
+    path('api/send/<str:sender>/<str:receiver>/', api.api_send),
 ]
 

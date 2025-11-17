@@ -1,32 +1,42 @@
 <!DOCTYPE html>
 <html>
 <body>
-    <h2>Chat with {{ email }}</h2>
 
-    <div id="messages"></div>
+<h2>Chat with {{ email }}</h2>
 
-    <input id="msg" placeholder="Reply">
-    <button onclick="sendMessage()">Send</button>
+<!-- If not admin, redirect -->
+<script>
+if (sessionStorage.getItem("userEmail") !== "admin@minicom.com") {
+    window.location = "/login/";
+}
+</script>
+
+<div id="messages"></div>
+
+<input id="msg" placeholder="Reply...">
+<button onclick="sendMsg()">Send</button>
 
 <script>
 const email = "{{ email }}";
 
 function loadMessages() {
     fetch(`/api/messages/${email}/`)
-        .then(r => r.json())
+        .then(response => response.json())
         .then(data => {
-            document.getElementById("messages").innerHTML =
-                data.map(m => `<p><b>${m.sender_type}:</b> ${m.content}</p>`).join("");
+            const box = document.getElementById("messages");
+            box.innerHTML = data
+                .map(m => `<p><b>${m.sender_type}:</b> ${m.content}</p>`)
+                .join("");
         });
 }
 
-function sendMessage() {
+function sendMsg() {
     const content = document.getElementById("msg").value;
 
-    fetch(`/api/send/${email}/`, {
+    fetch(`/api/send/admin@minicom.com/${email}/`, {
         method: "POST",
-        body: JSON.stringify({content}),
-        headers: {"Content-Type": "application/json"}
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({content})
     })
     .then(() => {
         document.getElementById("msg").value = "";

@@ -1,13 +1,21 @@
 <!DOCTYPE html>
 <html>
 <body>
-    <h2>All Users</h2>
 
-    <ul>
-        {% for u in users %}
-            <li><a href="/admin/chat/{{ u }}/">{{ u }}</a></li>
-        {% endfor %}
-    </ul>
+<h2>All Users</h2>
+
+<!-- If not admin, redirect -->
+<script>
+if (sessionStorage.getItem("userEmail") !== "admin@minicom.com") {
+    window.location = "/login/";
+}
+</script>
+
+<ul>
+    {% for u in participants %}
+        <li><a href="/admin/chat/{{ u }}/">{{ u }}</a></li>
+    {% endfor %}
+</ul>
 
 </body>
 </html>
