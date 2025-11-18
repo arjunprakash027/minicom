@@ -1,0 +1,34 @@
+<!-- foo/login.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>User login — Minicom (Foo)</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f7f9fb; margin:0; height:100vh; display:flex; align-items:center; justify-content:center; }
+    .card { background:white; padding:28px; border-radius:10px; box-shadow:0 6px 18px rgba(0,0,0,.08); width:320px; text-align:center; }
+    input { width:100%; padding:10px; margin-top:12px; border-radius:6px; border:1px solid #ccc; }
+    button { margin-top:12px; padding:10px 14px; background:#0A84FF; color:white; border:none; border-radius:6px; cursor:pointer; }
+    h1 { margin:0 0 6px }
+    p { color:#666; font-size:13px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Sign in to chat</h1>
+    <p>Enter your email to start a conversation with support</p>
+    <input id="email" placeholder="you@domain.com" />
+    <button id="go">Continue</button>
+  </div>
+
+  <script>
+    document.getElementById('go').onclick = () => {
+      const email = document.getElementById('email').value.trim();
+      if (!email) { alert('Please provide an email'); return; }
+      sessionStorage.setItem('email', email);
+      // open chat page (local)
+      window.location = 'chat.html';
+    };
+  </script>
+</body>
+</html>

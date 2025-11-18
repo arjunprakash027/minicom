@@ -1,6 +1,58 @@
 #!/bin/bash
-
 source .venv/bin/activate
 
-daphne -p 8000 minicom.asgi:application
-#python3 manage.py runserver 8000
+####################################
+# 1) KILL OLD PROCESSES
+####################################
+echo "Cleaning old servers..."
+
+# Kill python http servers
+pkill -f "python3 -m http.server" 2>/dev/null
+pkill -f "http.server" 2>/dev/null
+
+# Kill Daphne
+pkill -f "daphne" 2>/dev/null
+
+echo "Old servers cleaned."
+
+
+####################################
+# 2) FUNCTION TO START STATIC SERVER
+####################################
+start_static() {
+    DIR=$1
+    PORT=$2
+    NAME=$3
+
+    if [ ! -d "$DIR" ]; then
+        echo "Skipping $NAME — folder not found: $DIR"
+        return
+    fi
+
+    echo "Starting $NAME server at http://127.0.0.1:$PORT ..."
+
+    (
+        cd "$DIR" && python3 -m http.server "$PORT"
+    ) &
+
+    sleep 0.2
+}
+
+
+####################################
+# 3) START FOO SERVER
+####################################
+start_static "./foo-website" 8008 "Foo"
+
+
+####################################
+# 4) START BAR SERVER
+####################################
+start_static "./bar-website" 8009 "Bar"
+
+
+####################################
+# 5) START DJANGO BACKEND
+####################################
+echo "Starting Django backend on http://127.0.0.1:8000 ..."
+exec daphne -p 8000 minicom.asgi:application

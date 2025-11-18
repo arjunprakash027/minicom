@@ -1,9 +1,8 @@
+# minicom/urls.py
 from django.urls import path
-from minicom import views
+from minicom import api, views
 
 urlpatterns = [
-    path("login/", views.login_page),
-    path("chat/", views.chat_user),
-    path("admin/chat/", views.admin_list),
-    path("admin/chat/<str:email>/", views.admin_chat),
+    path('api/users/', api.list_users),
+    # WebSocket routes are handled by channels routing / consumers, not here
 ]

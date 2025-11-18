@@ -1,0 +1,144 @@
+<!-- bar/index.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Admin Dashboard — Minicom (Bar)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    :root { --blue:#0A84FF; --bg:#f5f7fb; }
+    body{ margin:0; font-family:Arial, sans-serif; height:100vh; background:var(--bg); display:flex; }
+    .sidebar{ width:300px; background:#fff; border-right:1px solid #e6e9ef; overflow-y:auto }
+    .head{ padding:18px; font-weight:700; color:#0B5FFF }
+    .user-item{ padding:12px 16px; border-bottom:1px solid #f0f2f6; cursor:pointer; display:flex; justify-content:space-between; align-items:center }
+    .user-item:hover{ background:#f7f8fb }
+    .user-item.active{ background:#e6f0ff; font-weight:600 }
+    .main{ flex:1; display:flex; flex-direction:column }
+    .chat-header{ padding:14px 18px; background:#0A84FF; color:white; font-weight:600 }
+    #messages{ flex:1; padding:20px; display:flex; flex-direction:column; gap:10px; overflow-y:auto; background:#eef2f8 }
+    .msg{ padding:10px 12px; border-radius:10px; max-width:70%; }
+    .msg-admin{ background:#0A84FF; color:white; margin-left:auto }
+    .msg-user{ background:white; color:#333; border:1px solid #e0e4ea; margin-right:auto }
+    .input{ display:flex; padding:12px; gap:8px; background:white; border-top:1px solid #e6e9ef }
+    #msg{ flex:1; padding:10px; border-radius:8px; border:1px solid #ccc }
+    #send-btn{ padding:10px 14px; background:var(--blue); color:white; border:none; border-radius:8px; cursor:pointer }
+    .muted{ color:#777; font-size:13px }
+  </style>
+</head>
+<body>
+
+<script>
+  // ensure admin
+  if (sessionStorage.getItem('email') !== 'admin@minicom.com') window.location = 'login.html';
+</script>
+
+<div class="sidebar">
+  <div class="head">Admin — Users</div>
+  <div id="user-list"></div>
+</div>
+
+<div class="main">
+  <div class="chat-header" id="chat-header">Select a user</div>
+  <div id="messages"><div style="padding:30px;text-align:center;color:#777" id="no-chat">Pick a user from the left to open chat</div></div>
+  <div class="input">
+    <input id="msg" placeholder="Write a reply..." />
+    <button id="send-btn">Send</button>
+  </div>
+</div>
+
+<script>
+  // CONFIG
+  const BACKEND_HOST = 'localhost:8000'; // adjust if needed
+  const API_BASE = `http://${BACKEND_HOST}`;
+
+  // WebSocket for admin role. Use dummy email in URL — consumer uses role to decide behavior.
+  const socket = new WebSocket(`ws://${BACKEND_HOST}/ws/chat/admin/dummy/`);
+
+  socket.onopen = () => console.info('Admin WS open');
+  socket.onclose = () => console.warn('Admin WS closed');
+
+  socket.onmessage = (evt) => {
+    const data = JSON.parse(evt.data);
+    if (data.type === 'user_list') {
+      // If you implement user_list in consumer later — otherwise we fetch via REST
+      buildUserList(data.users.map(u => u.email || u));
+    }
+    else if (data.type === 'conversation') {
+      renderConversation(data.messages || []);
+    }
+    else if (data.type === 'message') {
+      // single message arrives (live)
+      addMessage(data.message);
+    }
+  };
+
+  // fetch participants via REST API
+  function fetchUsers() {
+    fetch(`${API_BASE}/api/users/`)
+      .then(r => r.json())
+      .then(list => buildUserList(list))
+      .catch(err => {
+        console.error('Failed to load users', err);
+        document.getElementById('user-list').innerHTML = '<div style="padding:12px;color:#777">No users yet</div>';
+      });
+  }
+
+  let currentUser = null;
+
+  function buildUserList(list) {
+    const container = document.getElementById('user-list');
+    container.innerHTML = '';
+    list.forEach(email => {
+      const el = document.createElement('div');
+      el.className = 'user-item';
+      el.textContent = email;
+      el.dataset.email = email;
+      el.onclick = () => selectUser(email, el);
+      container.appendChild(el);
+    });
+  }
+
+  function selectUser(email, el) {
+    // highlight
+    document.querySelectorAll('.user-item').forEach(n => n.classList.remove('active'));
+    el.classList.add('active');
+
+    currentUser = email;
+    document.getElementById('chat-header').textContent = 'Chat with ' + email;
+
+    // request conversation from WS consumer
+    socket.send(JSON.stringify({ type: 'get_conversation', email }));
+  }
+
+  function renderConversation(messages) {
+    const box = document.getElementById('messages');
+    box.innerHTML = '';
+    if (!messages || messages.length === 0) {
+      box.innerHTML = '<div style="padding:30px;text-align:center;color:#777">No messages yet</div>';
+      return;
+    }
+    messages.forEach(addMessage);
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function addMessage(m) {
+    const box = document.getElementById('messages');
+    const div = document.createElement('div');
+    div.classList.add('msg', m.sender_type === 'admin' ? 'msg-admin' : 'msg-user');
+    div.textContent = m.content;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+  }
+
+  document.getElementById('send-btn').onclick = () => {
+    const text = document.getElementById('msg').value.trim();
+    if (!text || !currentUser) return;
+    socket.send(JSON.stringify({ type: 'message', to: currentUser, message: text }));
+    document.getElementById('msg').value = '';
+  };
+
+  // init
+  fetchUsers();
+</script>
+</body>
+</html>
