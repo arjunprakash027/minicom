@@ -6,7 +6,7 @@
 
 <!-- If not admin, redirect -->
 <script>
-if (sessionStorage.getItem("userEmail") !== "admin@minicom.com") {
+if (sessionStorage.getItem("email") !== "admin@minicom.com") {
     window.location = "/login/";
 }
 </script>

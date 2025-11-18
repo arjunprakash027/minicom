@@ -7,28 +7,14 @@ import json
 
 from .models import Message
 
-def is_admin(request):
-    """Check session state: is this the admin?"""
-    return request.session.get("role") == "admin"
-
-def is_user(request):
-    """Check session state: is this a participant / customer?"""
-    return request.session.get("role") == "user"
-
-def get_user_email(request):
-    """
-    Only users have emails in session.
-    Admin never has participant_email in session.
-    """
-    return request.session.get("email")
 
 def login_page(request):
     return render(request, "login.html")
 
-def chat_view(request):
+def chat_user(request):
     return render(request, "chat.html")
 
-def admin_dashboard(request):
+def admin_list(request):
     """
     The admin home page.
     We hard-set admin identity in session (since there's only one admin).
@@ -46,7 +32,7 @@ def admin_dashboard(request):
     return render(request, "admin_list.html", {"participants": participants})
 
 
-def admin_chat_view(request, email):
+def admin_chat(request, email):
     """
     Admin opens a chat with a specific participant using email as key.
     """

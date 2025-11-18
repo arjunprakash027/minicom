@@ -40,6 +40,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',
+    'channels',
     'minicom',
 )
 
@@ -73,7 +74,14 @@ TEMPLATES = [
     },
 ]
 
+ASGI_APPLICATION = "minicom.asgi.application"
 WSGI_APPLICATION = 'minicom.wsgi.application'
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND":"channels.layers.InMemoryChannelLayer",
+    },
+}
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_URLS_REGEX = r'.*'

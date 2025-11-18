@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <body>
+
 <h2>Login</h2>
 
 <input id="email" placeholder="email">
@@ -9,16 +10,10 @@
 <script>
 function login() {
     const email = document.getElementById("email").value.trim();
+    if (!email) return alert("Enter email");
 
-    if (!email) {
-        alert("Email required");
-        return;
-    }
-
-    // Save in session storage (clears when tab closes)
-    sessionStorage.setItem("userEmail", email);
-
-    // If admin → redirect to admin dashboard
+    sessionStorage.setItem("email", email);
+    
     if (email === "admin@minicom.com") {
         window.location = "/admin/chat/";
     } else {
@@ -26,6 +21,5 @@ function login() {
     }
 }
 </script>
-
 </body>
 </html>
