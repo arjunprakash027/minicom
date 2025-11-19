@@ -116,6 +116,39 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 "messages": messages
             })
 
+        # ---------------------------------------------------------
+        # Read Receipts
+        # ---------------------------------------------------------
+        elif data.get("type") == "read_messages":
+            # The client says "I have read these messages"
+            # We can either take a list of IDs or just mark all messages *from* the other person as read.
+            # For simplicity in this demo, let's mark all messages in the current conversation as read
+            # if the sender is the *other* person.
+
+            if self.role == "user":
+                # User is reading messages from Admin
+                await self.mark_messages_read(self.email, sender_type="admin")
+                
+                # Notify Admin that user read them
+                # Admin might be in the user's room
+                await self.channel_layer.group_send(
+                    self.user_room,
+                    {"type": "messages_read", "reader": "user", "email": self.email}
+                )
+
+            elif self.role == "admin":
+                # Admin is reading messages from User
+                target = data.get("email")
+                if target:
+                    await self.mark_messages_read(target, sender_type="user")
+                    
+                    # Notify User that admin read them
+                    target_room = f"user_{sanitize_email(target)}"
+                    await self.channel_layer.group_send(
+                        target_room,
+                        {"type": "messages_read", "reader": "admin", "email": target}
+                    )
+
 
     # ---------------------------------------------------------
     # Broadcast handler
@@ -124,6 +157,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.send_json({
             "type": "message",
             "message": event["message"]
+        })
+
+    async def messages_read(self, event):
+        await self.send_json({
+            "type": "messages_read",
+            "reader": event["reader"],
+            "email": event["email"]
         })
 
     # ---------------------------------------------------------
@@ -137,10 +177,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
             content=text
         )
         return {
+            "id": msg.id,
             "email": msg.participant_email,
             "sender_type": msg.sender_type,
             "content": msg.content,
             "timestamp": msg.timestamp.isoformat(),
+            "is_read": msg.is_read,
         }
 
     @database_sync_to_async
@@ -151,13 +193,24 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         return [
             {
+                "id": m.id,
                 "email": m.participant_email,
                 "sender_type": m.sender_type,
                 "content": m.content,
                 "timestamp": m.timestamp.isoformat(),
+                "is_read": m.is_read,
             }
             for m in msgs
         ]
+
+    @database_sync_to_async
+    def mark_messages_read(self, participant_email, sender_type):
+        # Mark all messages *sent by* sender_type as read
+        Message.objects.filter(
+            participant_email=participant_email,
+            sender_type=sender_type,
+            is_read=False
+        ).update(is_read=True)
 
     async def send_json(self, payload):
         await self.send(text_data=json.dumps(payload))

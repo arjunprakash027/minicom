@@ -7,6 +7,7 @@ class Message(models.Model):
     sender_type = models.CharField(max_length=5, choices=[('admin','Admin'),('user','User')])
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
 
 
     class Meta:
