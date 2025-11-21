@@ -2,6 +2,7 @@ import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from .models import Message
+from .ai import reply
 
 def sanitize_email(email: str) -> str:
     return email.replace('@', '-at-').replace('+', '-plus-')
@@ -55,12 +56,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 {"type": "chat_message", "message": saved}
             )
 
-            if self.active_room == self.user_room:
-                await self.channel_layer.group_send(
-                    self.active_room,
-                    {"type": "chat_message", "message": saved}
-                )
+            if not await self.check_admin_replied(self.email):
+                
+                ai_text = f"AI Agent: {await reply(text)}"
+                ai_msg = await self.save_message(self.email, ai_text, "ai")
 
+                await self.channel_layer.group_send(
+                    self.user_room,
+                    {"type": "chat_message", "message": ai_msg}
+                )
 
         elif data.get("type") == "message" and self.role == "admin":
             target = data.get("to")
@@ -114,7 +118,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
                         {"type": "messages_read", "reader": "admin", "email": target}
                     )
 
-
     async def chat_message(self, event):
         await self.send_json({
             "type": "message",
@@ -127,6 +130,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
             "reader": event["reader"],
             "email": event["email"]
         })
+
+    @database_sync_to_async
+    def check_admin_replied(self, email):
+        return Message.objects.filter(
+            participant_email=email,
+            sender_type="admin"
+        ).exists()
 
     @database_sync_to_async
     def save_message(self, email, text, sender_type):
