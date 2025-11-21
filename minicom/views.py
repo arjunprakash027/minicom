@@ -5,6 +5,4 @@ from django.utils.decorators import method_decorator
 from django.db.models import Q
 import json
 
-# not using this at all
-
 
