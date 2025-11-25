@@ -8,13 +8,10 @@
   <style>
     :root { --blue:#0A84FF; --muted:#f1f3f7; }
     body { font-family: Arial, sans-serif; margin:0; background:#f7f9fb; height:100vh; }
-    /* page content so background isn't blank */
     .hero { padding:40px; max-width:900px; margin:0 auto; color:#333; }
     .hero h1 { margin:0 0 6px }
     .hero p { color:#666 }
-    /* floating bubble */
     #chat-bubble { position:fixed; right:20px; bottom:20px; background:var(--blue); width:62px; height:62px; border-radius:50%; color:#fff; display:flex; align-items:center; justify-content:center; font-size:26px; cursor:pointer; box-shadow:0 8px 20px rgba(10,132,255,0.18); z-index:9999 }
-    /* chat window */
     #chat-window { position:fixed; right:20px; bottom:96px; width:340px; max-height:520px; background:white; border-radius:10px; box-shadow:0 12px 30px rgba(0,0,0,0.18); display:none; flex-direction:column; overflow:hidden; z-index:9999 }
     #chat-header { background:var(--blue); color:white; padding:12px; font-weight:600; text-align:center }
     #messages { padding:14px; display:flex; flex-direction:column; gap:8px; overflow-y:auto; min-height:140px; max-height:420px; background:#f5f7fa }
@@ -45,30 +42,24 @@
   </div>
 
 <script>
-  // CONFIG: backend host (adjust if needed)
-  const BACKEND_HOST = 'localhost:8000'; // change to your Django host:port
+  const BACKEND_HOST = 'localhost:8000';
 
-  // check login (sessionStorage)
   const email = sessionStorage.getItem('email');
   if (!email) {
     window.location = 'login.html';
   }
 
-  // UI toggles
   const bubble = document.getElementById('chat-bubble');
   const windowBox = document.getElementById('chat-window');
   bubble.onclick = () => {
     windowBox.style.display = (windowBox.style.display === 'flex') ? 'none' : 'flex';
     if (windowBox.style.display === 'flex') {
       document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
-      // Mark messages as read when opening the window
       if (socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify({ type: 'read_messages' }));
       }
     }
   };
-
-  // WebSocket (user role)
   const socket = new WebSocket(`ws://${BACKEND_HOST}/ws/chat/user/${encodeURIComponent(email)}/`);
 
   socket.onopen = () => {
@@ -78,19 +69,17 @@
   socket.onmessage = (evt) => {
     const data = JSON.parse(evt.data);
     if (data.type === 'history' || data.type === 'conversation') {
-      // remove empty if present
+
       const empty = document.getElementById('empty'); if (empty) empty.remove();
       data.messages.forEach(renderMessage);
     } else if (data.type === 'message') {
       const empty = document.getElementById('empty'); if (empty) empty.remove();
       renderMessage(data.message);
       
-      // If window is open, mark as read immediately
       if (windowBox.style.display === 'flex') {
          socket.send(JSON.stringify({ type: 'read_messages' }));
       }
     } else if (data.type === 'messages_read') {
-       // Update all my sent messages to double tick
        if (data.reader === 'admin') {
          document.querySelectorAll('.tick').forEach(el => el.textContent = '✓✓');
        }
@@ -104,7 +93,6 @@
     const div = document.createElement('div');
     div.classList.add('msg', m.sender_type === 'admin' || m.sender_type === 'ai' ? 'msg-admin' : 'msg-user');
     
-    // Add tick for user messages
     let tick = '';
     if (m.sender_type === 'user') {
         const status = m.is_read ? '✓✓' : '✓';
@@ -123,7 +111,6 @@
     document.getElementById('msg').value = '';
   };
 
-  // optional: press Enter to send
   document.getElementById('msg').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); document.getElementById('send-btn').click(); }
   });

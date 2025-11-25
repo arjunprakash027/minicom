@@ -1,5 +1,6 @@
-from django.db import models
-from django.contrib.auth.models import User
+mdbmfrom django.db import models
+from
+ django.contrib.auth.models import User
 
 
 class Message(models.Model):
@@ -17,3 +18,4 @@ class Message(models.Model):
 
     def __str__(self):
         return f"{self.sender_type}: {self.content[:50]}"
+        
