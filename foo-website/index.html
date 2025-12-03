@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minicom Support</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --surface: #ffffff;
+            --bg: #f3f4f6;
+            --text: #1f2937;
+            --border: #e5e7eb;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f9fafb;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text);
+        }
+
+        /* Demo Page Content */
+        .hero {
+            text-align: center;
+            max-width: 600px;
+            padding: 2rem;
+        }
+
+        h1 {
+            margin-bottom: 0.5rem;
+        }
+
+        p {
+            color: #6b7280;
+            line-height: 1.5;
+        }
+
+        /* Chat Bubble */
+        #chat-bubble {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 60px;
+            height: 60px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 1.8rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            transition: transform 0.2s;
+            z-index: 1000;
+        }
+
+        #chat-bubble:hover {
+            transform: scale(1.05);
+        }
+
+        /* Chat Window */
+        #chat-window {
+            position: fixed;
+            bottom: 6rem;
+            right: 2rem;
+            width: 360px;
+            height: 500px;
+            background: var(--surface);
+            border-radius: 16px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            z-index: 1000;
+        }
+
+        .header {
+            background: var(--primary);
+            color: white;
+            padding: 1rem;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Login State */
+        #login-view {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        /* Chat State */
+        #chat-view {
+            flex: 1;
+            display: none;
+            /* Hidden until logged in */
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            background: #f9fafb;
+        }
+
+        .msg {
+            max-width: 75%;
+            padding: 0.6rem 0.9rem;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .msg-user {
+            align-self: flex-end;
+            background: var(--primary);
+            color: white;
+            border-bottom-right-radius: 2px;
+        }
+
+        .msg-admin {
+            align-self: flex-start;
+            background: white;
+            border: 1px solid var(--border);
+            border-bottom-left-radius: 2px;
+        }
+
+        .input-area {
+            padding: 1rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 0.5rem;
+            background: white;
+        }
+
+        input {
+            flex: 1;
+            padding: 0.6rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            outline: none;
+            font-family: inherit;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .tick {
+            font-size: 0.65rem;
+            margin-left: 4px;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="hero">
+        <h1>Welcome to Minicom</h1>
+        <p>This is a demo page simulating a customer's website. Click the chat bubble in the bottom right to start a
+            support conversation.</p>
+    </div>
+
+    <!-- Floating Action Button -->
+    <div id="chat-bubble" onclick="toggleChat()">💬</div>
+
+    <!-- Chat Widget -->
+    <div id="chat-window">
+        <div class="header">
+            <span>Support Team</span>
+            <span style="font-size: 1.2rem; cursor: pointer;" onclick="toggleChat()">×</span>
+        </div>
+
+        <!-- 1. Login View -->
+        <div id="login-view">
+            <h3 style="margin-top: 0;">Start a conversation</h3>
+            <p style="font-size: 0.9rem; color: #6b7280; margin-bottom: 1.5rem;">Enter your email to connect with our
+                team.</p>
+            <input type="email" id="email-input" placeholder="name@example.com"
+                style="width: 100%; box-sizing: border-box; margin-bottom: 0.8rem;">
+            <button onclick="login()" style="width: 100%; padding: 0.6rem;">Start Chat</button>
+        </div>
+
+        <!-- 2. Chat View -->
+        <div id="chat-view">
+            <div id="messages">
+                <div style="text-align: center; color: #999; margin-top: 2rem; font-size: 0.9rem;">
+                    Say hello to start the chat!
+                </div>
+            </div>
+            <div class="input-area">
+                <input id="msg-input" placeholder="Type a message..." />
+                <button onclick="send()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BACKEND = 'localhost:8000';
+        let socket = null;
+        let email = null;
+
+        function toggleChat() {
+            const win = document.getElementById('chat-window');
+            const isVisible = win.style.display === 'flex';
+            win.style.display = isVisible ? 'none' : 'flex';
+
+            // If opening and already logged in, mark read
+            if (!isVisible && email && socket) {
+                socket.send(JSON.stringify({ type: 'read_messages' }));
+            }
+        }
+
+        function login() {
+            const val = document.getElementById('email-input').value.trim();
+            if (!val) return;
+            email = val;
+
+            // Switch views
+            document.getElementById('login-view').style.display = 'none';
+            document.getElementById('chat-view').style.display = 'flex';
+
+            connect();
+        }
+
+        function connect() {
+            socket = new WebSocket(`ws://${BACKEND}/ws/chat/user/${encodeURIComponent(email)}/`);
+
+            socket.onopen = () => console.log('Connected');
+
+            socket.onmessage = (e) => {
+                const data = JSON.parse(e.data);
+
+                if (data.type === 'history' || data.type === 'conversation') {
+                    renderMessages(data.messages);
+                }
+                else if (data.type === 'message') {
+                    appendMessage(data.message);
+                    // If chat is open, mark as read immediately
+                    if (document.getElementById('chat-window').style.display === 'flex') {
+                        socket.send(JSON.stringify({ type: 'read_messages' }));
+                    }
+                }
+                else if (data.type === 'messages_read' && data.reader === 'admin') {
+                    document.querySelectorAll('.tick').forEach(el => el.innerText = '✓✓');
+                }
+            };
+        }
+
+        function renderMessages(msgs) {
+            const box = document.getElementById('messages');
+            box.innerHTML = '';
+            if (!msgs || !msgs.length) {
+                box.innerHTML = '<div style="text-align: center; color: #999; margin-top: 2rem; font-size: 0.9rem;">No messages yet.</div>';
+                return;
+            }
+            msgs.forEach(appendMessage);
+        }
+
+        function appendMessage(m) {
+            const box = document.getElementById('messages');
+            if (box.innerText.includes('No messages yet')) box.innerHTML = '';
+
+            const div = document.createElement('div');
+            const isMe = m.sender_type === 'user';
+            div.className = `msg ${isMe ? 'msg-user' : 'msg-admin'}`;
+
+            let content = m.content;
+            if (isMe) {
+                const ticks = m.is_read ? '✓✓' : '✓';
+                content += `<span class="tick">${ticks}</span>`;
+            }
+
+            div.innerHTML = content;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function send() {
+            const input = document.getElementById('msg-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            socket.send(JSON.stringify({ type: 'message', message: text }));
+            input.value = '';
+        }
+
+        document.getElementById('msg-input').onkeydown = (e) => {
+            if (e.key === 'Enter') send();
+        };
+    </script>
+</body>
+
+</html>

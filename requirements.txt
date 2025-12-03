@@ -3,3 +3,5 @@ django-cors-headers
 channels==2.4.0
 daphne==2.5.0
 asgiref<3.3.0
+setuptools
+llama-cpp-python
